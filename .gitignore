@@ -1,0 +1,10 @@
+.env
+appforge.db
+__pycache__/
+*.pyc
+.pytest_cache/
+.vscode/
+.idea/
+list_models.py
+test_api.py
+test_both_keys.py

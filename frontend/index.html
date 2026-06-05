@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AppForge AI — NL to App Compiler</title>
+  <meta name="description" content="Convert natural language app descriptions into strict, validated, executable application schemas using a multi-stage AI compiler pipeline." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <!-- Sleek premium icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <!-- ── Background FX ──────────────────────────────────────────────────── -->
+  <div class="bg-grid"></div>
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-orb orb-3"></div>
+
+  <!-- ── Header ────────────────────────────────────────────────────────── -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <i data-lucide="cpu" class="logo-icon-svg"></i>
+        <span class="logo-text">AppForge <span class="logo-ai">AI</span></span>
+        <span class="logo-badge">v1.0</span>
+      </div>
+      <nav class="nav">
+        <button class="nav-btn active" data-tab="builder" id="nav-builder">
+          <i data-lucide="hammer" class="nav-icon"></i> Builder
+        </button>
+        <button class="nav-btn" data-tab="history" id="nav-history">
+          <i data-lucide="history" class="nav-icon"></i> History
+        </button>
+        <button class="nav-btn" data-tab="eval" id="nav-eval">
+          <i data-lucide="bar-chart-3" class="nav-icon"></i> Evaluation
+        </button>
+        <button class="nav-btn" data-tab="about" id="nav-about">
+          <i data-lucide="git-branch" class="nav-icon"></i> Architecture
+        </button>
+      </nav>
+      <div class="header-status">
+        <div class="status-dot" id="status-dot"></div>
+        <span class="status-text" id="status-text">Ready</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Main Content ───────────────────────────────────────────────────── -->
+  <main class="main">
+
+    <!-- ══════════════════ TAB: BUILDER ══════════════════ -->
+    <div class="tab-content active" id="tab-builder">
+      <div class="builder-layout">
+
+        <!-- Left Panel: Input -->
+        <div class="panel panel-input">
+          <div class="panel-header">
+            <h2 class="panel-title">
+              <i data-lucide="terminal" class="title-icon"></i> Describe Your App
+            </h2>
+            <div class="mode-selector">
+              <label class="mode-label">Mode</label>
+              <div class="mode-pills">
+                <button class="mode-pill" data-mode="fast" id="mode-fast">
+                  <i data-lucide="zap" class="pill-icon"></i> Fast
+                </button>
+                <button class="mode-pill active" data-mode="balanced" id="mode-balanced">
+                  <i data-lucide="sliders" class="pill-icon"></i> Balanced
+                </button>
+                <button class="mode-pill" data-mode="premium" id="mode-premium">
+                  <i data-lucide="award" class="pill-icon"></i> Premium
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="prompt-area">
+            <textarea
+              id="prompt-input"
+              class="prompt-textarea"
+              placeholder="Describe your app in natural language...
+
+Example: Build a CRM with login, contacts management, deal pipeline, role-based access (admin/sales/viewer), and premium plan with Stripe payments. Admins can see analytics."
+              rows="8"
+            ></textarea>
+            <div class="prompt-footer">
+              <div class="char-count"><span id="char-count">0</span> chars</div>
+              <div class="example-pills">
+                <span class="ex-label">Try:</span>
+                <button class="ex-pill" id="ex-crm">CRM</button>
+                <button class="ex-pill" id="ex-lms">LMS</button>
+                <button class="ex-pill" id="ex-ecom">E-commerce</button>
+                <button class="ex-pill" id="ex-vague">Vague</button>
+              </div>
+            </div>
+          </div>
+
+          <button class="generate-btn" id="generate-btn">
+            <i data-lucide="play" class="btn-icon"></i>
+            <span class="btn-text">Generate Schema</span>
+            <div class="btn-loader hidden" id="btn-loader"></div>
+          </button>
+
+          <!-- Cost estimate -->
+          <div class="cost-card" id="cost-card">
+            <div class="cost-row">
+              <span><i data-lucide="clock" class="row-icon"></i> Estimated latency</span>
+              <span id="cost-latency">5-12s</span>
+            </div>
+            <div class="cost-row">
+              <span><i data-lucide="dollar-sign" class="row-icon"></i> Estimated cost</span>
+              <span id="cost-price">~$0.005-0.02</span>
+            </div>
+            <div class="cost-row">
+              <span><i data-lucide="bot" class="row-icon"></i> Model</span>
+              <span id="cost-model">gemini-2.5-flash</span>
+            </div>
+          </div>
+
+          <!-- Pipeline stages progress -->
+          <div class="pipeline-vis" id="pipeline-vis">
+            <div class="pipeline-title">Pipeline Progress</div>
+            <div class="pipeline-stages">
+              <div class="pipe-stage" id="ps-stage1_intent" data-stage="stage1_intent">
+                <i data-lucide="target" class="pipe-icon-svg"></i>
+                <div class="pipe-info">
+                  <div class="pipe-name">Intent Extractor</div>
+                  <div class="pipe-desc">Parse intent → IntentSpec</div>
+                </div>
+                <div class="pipe-status idle">—</div>
+              </div>
+              <div class="pipe-arrow">↓</div>
+              <div class="pipe-stage" id="ps-stage2_design" data-stage="stage2_design">
+                <i data-lucide="layout" class="pipe-icon-svg"></i>
+                <div class="pipe-info">
+                  <div class="pipe-name">System Designer</div>
+                  <div class="pipe-desc">Intent → Architecture</div>
+                </div>
+                <div class="pipe-status idle">—</div>
+              </div>
+              <div class="pipe-arrow">↓</div>
+              <div class="pipe-stage" id="ps-stage3_schema" data-stage="stage3_schema">
+                <i data-lucide="database" class="pipe-icon-svg"></i>
+                <div class="pipe-info">
+                  <div class="pipe-name">Schema Generator</div>
+                  <div class="pipe-desc">DB + API + UI + Auth</div>
+                </div>
+                <div class="pipe-status idle">—</div>
+              </div>
+              <div class="pipe-arrow">↓</div>
+              <div class="pipe-stage" id="ps-stage4_refinement" data-stage="stage4_refinement">
+                <i data-lucide="refresh-cw" class="pipe-icon-svg"></i>
+                <div class="pipe-info">
+                  <div class="pipe-name">Refinement Engine</div>
+                  <div class="pipe-desc">Cross-layer consistency</div>
+                </div>
+                <div class="pipe-status idle">—</div>
+              </div>
+              <div class="pipe-arrow">↓</div>
+              <div class="pipe-stage" id="ps-validation" data-stage="validation">
+                <i data-lucide="shield-check" class="pipe-icon-svg"></i>
+                <div class="pipe-info">
+                  <div class="pipe-name">Validator + Repair</div>
+                  <div class="pipe-desc">10-check consistency engine</div>
+                </div>
+                <div class="pipe-status idle">—</div>
+              </div>
+              <div class="pipe-arrow">↓</div>
+              <div class="pipe-stage" id="ps-runtime_simulation" data-stage="runtime_simulation">
+                <i data-lucide="server" class="pipe-icon-svg"></i>
+                <div class="pipe-info">
+                  <div class="pipe-name">Runtime Simulator</div>
+                  <div class="pipe-desc">Execution proof</div>
+                </div>
+                <div class="pipe-status idle">—</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Panel: Output -->
+        <div class="panel panel-output">
+          <!-- Empty state -->
+          <div class="output-empty" id="output-empty">
+            <i data-lucide="binary" class="empty-icon-svg"></i>
+            <h3>Waiting for input</h3>
+            <p>Describe your app on the left and hit Generate. The system will run a 4-stage AI pipeline to produce a validated, executable schema.</p>
+            <div class="empty-features">
+              <div class="ef-item"><i data-lucide="table" class="ef-icon"></i> DB Schema</div>
+              <div class="ef-item"><i data-lucide="link-2" class="ef-icon"></i> API Schema</div>
+              <div class="ef-item"><i data-lucide="smartphone" class="ef-icon"></i> UI Schema</div>
+              <div class="ef-item"><i data-lucide="lock" class="ef-icon"></i> Auth Schema</div>
+              <div class="ef-item"><i data-lucide="git-commit" class="ef-icon"></i> Business Logic</div>
+              <div class="ef-item"><i data-lucide="activity" class="ef-icon"></i> Exec Report</div>
+            </div>
+          </div>
+
+          <!-- Output content -->
+          <div class="output-content hidden" id="output-content">
+            <!-- Metrics bar -->
+            <div class="metrics-bar" id="metrics-bar">
+              <div class="metric-chip" id="mc-status">
+                <i data-lucide="info" class="mc-icon-svg"></i>
+                <span id="mc-status-text">—</span>
+              </div>
+              <div class="metric-chip">
+                <i data-lucide="timer" class="mc-icon-svg"></i>
+                <span id="mc-latency">—</span>
+              </div>
+              <div class="metric-chip">
+                <i data-lucide="credit-card" class="mc-icon-svg"></i>
+                <span id="mc-cost">—</span>
+              </div>
+              <div class="metric-chip">
+                <i data-lucide="wrench" class="mc-icon-svg"></i>
+                <span id="mc-repairs">0 repairs</span>
+              </div>
+              <div class="metric-chip">
+                <i data-lucide="cpu" class="mc-icon-svg"></i>
+                <span id="mc-model">—</span>
+              </div>
+              <div class="actions-right">
+                <button class="action-btn" id="copy-btn" title="Copy JSON"><i data-lucide="copy" class="btn-icon-sm"></i></button>
+                <button class="action-btn" id="download-btn" title="Download JSON"><i data-lucide="download" class="btn-icon-sm"></i></button>
+              </div>
+            </div>
+
+            <!-- Tab navigation for output sections -->
+            <div class="output-tabs">
+              <button class="out-tab active" data-out="overview" id="ot-overview">Overview</button>
+              <button class="out-tab" data-out="db" id="ot-db">DB Schema</button>
+              <button class="out-tab" data-out="api" id="ot-api">API Schema</button>
+              <button class="out-tab" data-out="ui" id="ot-ui">UI Schema</button>
+              <button class="out-tab" data-out="auth" id="ot-auth">Auth</button>
+              <button class="out-tab" data-out="logic" id="ot-logic">Business Logic</button>
+              <button class="out-tab" data-out="validation" id="ot-validation">Validation</button>
+              <button class="out-tab" data-out="execution" id="ot-execution">Execution</button>
+              <button class="out-tab" data-out="raw" id="ot-raw">Raw JSON</button>
+            </div>
+
+            <div class="out-sections">
+              <!-- Overview -->
+              <div class="out-section active" id="os-overview">
+                <div class="overview-grid" id="overview-grid"></div>
+              </div>
+
+              <!-- DB Schema -->
+              <div class="out-section" id="os-db">
+                <div class="schema-viewer" id="db-viewer"></div>
+              </div>
+
+              <!-- API Schema -->
+              <div class="out-section" id="os-api">
+                <div class="schema-viewer" id="api-viewer"></div>
+              </div>
+
+              <!-- UI Schema -->
+              <div class="out-section" id="os-ui">
+                <div class="schema-viewer" id="ui-viewer"></div>
+              </div>
+
+              <!-- Auth Schema -->
+              <div class="out-section" id="os-auth">
+                <div class="schema-viewer" id="auth-viewer"></div>
+              </div>
+
+              <!-- Business Logic -->
+              <div class="out-section" id="os-logic">
+                <div class="schema-viewer" id="logic-viewer"></div>
+              </div>
+
+              <!-- Validation Report -->
+              <div class="out-section" id="os-validation">
+                <div class="schema-viewer" id="validation-viewer"></div>
+              </div>
+
+              <!-- Execution Report -->
+              <div class="out-section" id="os-execution">
+                <div class="schema-viewer" id="execution-viewer"></div>
+              </div>
+
+              <!-- Raw JSON -->
+              <div class="out-section" id="os-raw">
+                <pre class="raw-json" id="raw-json-view"></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══════════════════ TAB: HISTORY ══════════════════ -->
+    <div class="tab-content" id="tab-history">
+      <div class="page-header">
+        <h2><i data-lucide="history" class="title-icon"></i> Run History</h2>
+        <button class="refresh-btn" id="refresh-history"><i data-lucide="refresh-cw" class="btn-icon"></i> Refresh</button>
+      </div>
+      <div class="history-grid" id="history-grid">
+        <div class="loading-msg">Loading history...</div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ TAB: EVALUATION ══════════════════ -->
+    <div class="tab-content" id="tab-eval">
+      <div class="page-header">
+        <h2><i data-lucide="bar-chart-2" class="title-icon"></i> Evaluation Framework</h2>
+        <div class="eval-controls">
+          <select class="eval-select" id="eval-mode">
+            <option value="fast">Fast mode</option>
+            <option value="balanced">Balanced mode</option>
+          </select>
+          <select class="eval-select" id="eval-cases">
+            <option value="3">3 cases (quick)</option>
+            <option value="5">5 cases</option>
+            <option value="10">10 cases</option>
+            <option value="20">All 20 cases</option>
+          </select>
+          <button class="run-eval-btn" id="run-eval-btn"><i data-lucide="play" class="btn-icon"></i> Run Evaluation</button>
+        </div>
+      </div>
+
+      <div class="eval-content">
+        <!-- Test case list -->
+        <div class="eval-panel">
+          <h3>Test Cases</h3>
+          <div class="test-cases-grid" id="test-cases-grid"></div>
+        </div>
+
+        <!-- Results -->
+        <div class="eval-panel" id="eval-results-panel">
+          <h3>Results</h3>
+          <div class="eval-charts" id="eval-charts">
+            <div class="chart-card">
+              <h4>Success Rate by Category</h4>
+              <canvas id="chart-success" height="200"></canvas>
+            </div>
+            <div class="chart-card">
+              <h4>Latency Distribution</h4>
+              <canvas id="chart-latency" height="200"></canvas>
+            </div>
+          </div>
+          <div class="eval-metrics-summary" id="eval-summary">
+            <div class="empty-eval">Run an evaluation to see metrics</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ TAB: ABOUT ══════════════════ -->
+    <div class="tab-content" id="tab-about">
+      <div class="about-content">
+        <h2><i data-lucide="git-branch" class="title-icon"></i> Architecture Overview</h2>
+        <div class="arch-diagram">
+          <div class="arch-flow">
+            <div class="arch-box input-box">
+              <i data-lucide="file-text" class="arch-icon-svg"></i>
+              <div class="arch-label">Natural Language</div>
+              <div class="arch-sub">User prompt</div>
+            </div>
+            <i data-lucide="arrow-right" class="arch-arrow-svg"></i>
+            <div class="arch-box stage-box">
+              <i data-lucide="target" class="arch-icon-svg"></i>
+              <div class="arch-label">Stage 1</div>
+              <div class="arch-sub">Intent Extractor</div>
+            </div>
+            <i data-lucide="arrow-right" class="arch-arrow-svg"></i>
+            <div class="arch-box stage-box">
+              <i data-lucide="layout" class="arch-icon-svg"></i>
+              <div class="arch-label">Stage 2</div>
+              <div class="arch-sub">System Designer</div>
+            </div>
+            <i data-lucide="arrow-right" class="arch-arrow-svg"></i>
+            <div class="arch-box stage-box">
+              <i data-lucide="database" class="arch-icon-svg"></i>
+              <div class="arch-label">Stage 3</div>
+              <div class="arch-sub">Schema Generator</div>
+            </div>
+            <i data-lucide="arrow-right" class="arch-arrow-svg"></i>
+            <div class="arch-box stage-box">
+              <i data-lucide="refresh-cw" class="arch-icon-svg"></i>
+              <div class="arch-label">Stage 4</div>
+              <div class="arch-sub">Refinement Engine</div>
+            </div>
+          </div>
+          <div class="arch-flow arch-flow-2">
+            <div class="arch-box validator-box">
+              <i data-lucide="shield-check" class="arch-icon-svg"></i>
+              <div class="arch-label">Validator</div>
+              <div class="arch-sub">10 cross-layer checks</div>
+            </div>
+            <i data-lucide="repeat" class="arch-arrow-svg loop-icon"></i>
+            <div class="arch-box repair-box">
+              <i data-lucide="wrench" class="arch-icon-svg"></i>
+              <div class="arch-label">Repair Engine</div>
+              <div class="arch-sub">Targeted layer re-gen</div>
+            </div>
+            <i data-lucide="arrow-right" class="arch-arrow-svg"></i>
+            <div class="arch-box runtime-box">
+              <i data-lucide="server" class="arch-icon-svg"></i>
+              <div class="arch-label">Runtime Sim</div>
+              <div class="arch-sub">Execution proof</div>
+            </div>
+            <i data-lucide="arrow-right" class="arch-arrow-svg"></i>
+            <div class="arch-box output-box">
+              <i data-lucide="package" class="arch-icon-svg"></i>
+              <div class="arch-label">Output</div>
+              <div class="arch-sub">Validated schema</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="about-cards">
+          <div class="about-card">
+            <h3><i data-lucide="target" class="card-icon"></i> Stage 1: Intent Extractor</h3>
+            <p>Parses raw NL into a structured <code>IntentSpec</code>. Lists ambiguities, makes documented assumptions, extracts entities, roles, features, and constraints. Temperature: 0.3.</p>
+          </div>
+          <div class="about-card">
+            <h3><i data-lucide="layout" class="card-icon"></i> Stage 2: System Designer</h3>
+            <p>Converts <code>IntentSpec</code> → <code>ArchitectureSpec</code>. Defines the full data model with typed fields and FK relations, permission matrix, API surface (CRUD + custom), and UI flow map. Temperature: 0.1.</p>
+          </div>
+          <div class="about-card">
+            <h3><i data-lucide="database" class="card-icon"></i> Stage 3: Schema Generator</h3>
+            <p>Generates all 5 layers simultaneously: DB schema, API schema, UI schema, Auth schema, and Business Logic. Temperature: 0.0.</p>
+          </div>
+          <div class="about-card">
+            <h3><i data-lucide="refresh-cw" class="card-icon"></i> Stage 4: Refinement Engine</h3>
+            <p>The "linker" step. Receives the full schema and resolves cross-layer inconsistencies: UI→API→DB field alignment, role consistency, FK resolution. Temperature: 0.0.</p>
+          </div>
+          <div class="about-card">
+            <h3><i data-lucide="shield-check" class="card-icon"></i> Validation + Repair</h3>
+            <p>10 cross-layer checks: missing PKs, orphaned FKs, undefined roles, unmapped UI→API, mismatched response fields. On failure: targeted layer re-generation (not full retry). Max 3 repair cycles.</p>
+          </div>
+          <div class="about-card">
+            <h3><i data-lucide="server" class="card-icon"></i> Runtime Simulator</h3>
+            <p>Static analysis engine that "executes" the schema: resolves all FKs, checks all routes are reachable, verifies auth gates are accessible from UI.</p>
+          </div>
+        </div>
+
+        <div class="tradeoff-table">
+          <h3>💰 Cost vs Quality Tradeoff</h3>
+          <table>
+            <thead>
+              <tr><th>Mode</th><th>Model</th><th>Temp</th><th>Latency</th><th>Cost/Run</th><th>Quality</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>⚡ Fast</td><td>gemini-2.5-flash</td><td>0.0</td><td>2-5s</td><td>~$0.001</td><td>Good</td></tr>
+              <tr><td>⚖️ Balanced</td><td>gemini-2.5-flash</td><td>0.1</td><td>3-7s</td><td>~$0.001</td><td>Better</td></tr>
+              <tr><td>💎 Premium</td><td>gemini-2.5-flash</td><td>0.0</td><td>4-10s</td><td>~$0.001</td><td>Best</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
