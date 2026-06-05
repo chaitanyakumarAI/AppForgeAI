@@ -578,3 +578,11 @@ tr:hover td { background: var(--surface2); }
   .eval-content { grid-template-columns: 1fr; }
 }
 
+.logo-img {
+  height: 28px;
+  width: 28px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid rgba(124, 58, 237, 0.25);
+  box-shadow: 0 0 10px rgba(124, 58, 237, 0.2);
+}
